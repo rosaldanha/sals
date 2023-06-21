@@ -1,0 +1,20 @@
+GET
+URL_DOWNLOAD_YAML = "https://esphome.sal.net.br/edit?configuration=ledControllerEscritorio.yaml"
+
+POST (save)
+https://esphome.sal.net.br/edit?configuration=ledControllerEscritorio.yaml
+PARAMETROS
+ configuration: ledControllerEscritorio.yaml
+ payload: 
+ esphome:
+   name: led_controller_escritorio
+   platform: ESP8266
+   board: d1_mini
+   comment: "Controlador dos leds das mesas"
+
+wifi:
+   ssid: "sorj-iot"
+   password:  ....
+
+GET (INSTALL)
+https://esphome.sal.net.br/info?configuration=smr2010.yaml

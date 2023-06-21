@@ -1,0 +1,21 @@
+
+
+
+{
+	"GET": {
+		"scheme": "wss",
+		"host": "esphome.sal.net.br",
+		"filename": "/run",
+		"remote": {
+			"Endereço": "192.168.60.101:443"
+		}
+	}
+}
+
+
+envia comando
+{"type":"spawn","configuration":"smr2010.yaml","port":"OTA"}
+
+recebe resposta:
+
+{"event": "line", "data": "\u001b[32mINFO Reading configuration /config/smr2010.yaml...\u001b[0m\n"}
