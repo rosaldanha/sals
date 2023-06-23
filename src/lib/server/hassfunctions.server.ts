@@ -1,10 +1,6 @@
 import type { Device, Entity, Panel } from '$lib/hassinterfaces.js';
 import { env } from '$env/dynamic/private';
 
-
-
-
-
 export async function getEntityState(entityId:string){
     let entityState: Entity = {
         entity_id:'',
@@ -30,6 +26,7 @@ export async function getEntityState(entityId:string){
     }
     return entityState;
 }
+
 export async function getTemplateResolved(templateStr:string) {
     let jsonResult: string = '';
     try {

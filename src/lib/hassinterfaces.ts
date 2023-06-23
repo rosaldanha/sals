@@ -19,10 +19,19 @@ export interface Panel {
     panel_name: string;
     panel_area: string;
 }
+export enum BUTTONSTATE {
+    AVAILABLE = "available",
+    SEARCHING = "searching",
+    REGISTERED = "registered"
+}
 
-// export interface DeviceEntity extends Device {
-//     device_entities: Entity[];
-// }
+export interface PanelButton {
+    device: Device | null;
+    panelName: string;
+    panelArea: string;
+    buttonId:  string ;
+    buttonState: BUTTONSTATE;
+}
 export const deviceCapabilities = {
      light: 'LIGHT',
     switch: 'SWITCH',

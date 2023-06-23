@@ -1,4 +1,3 @@
-// TODO: fazer upload para github
 // TODO: ajustar interface
 // TODO: criar funcionalidade para identificar dispositivo X botão conectado
 
