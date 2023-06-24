@@ -15,6 +15,7 @@
     import YAML from 'yaml';
     export let deviceStore: Writable<Device>;
     export let entitiesIds: string[];
+    export let esphomeServer: string;
     //export let entities: string[];
     const controlTypes: string[] = ["disabled","generic_toggle"]
     const CONTROL_TYPE_DISABLED: number = 0;
@@ -30,10 +31,6 @@
     let arraySelectedEntites: string[];
 
     function prepareDeviceWithDefaults(){
-        
-        //const device = $deviceStore;
-         
-        
         controlType = $deviceStore.device_entities.find((entity:Entity)=>{
             return entity.entity_id === `sensor.${$deviceStore.device_name}_control_type`;
         }) || {
@@ -65,9 +62,7 @@
                 last_changed: '',
                 last_updated: ''
             } ;        
-            $deviceStore.device_entities.push(panelName);
-        
-
+        $deviceStore.device_entities.push(panelName);
         lightEntity = $deviceStore.device_entities.find((entity:Entity) => {
             return  entity.entity_id.startsWith('light');
         }) || {
@@ -145,9 +140,9 @@
         createConfig();      
     });
 async function sendConfig(){
-    const serverUrl = "https://esphome.sal.net.br"
+    
 
-    const url = `${serverUrl}/edit?configuration=${$deviceStore.device_name}.yaml`;
+    const url = `${esphomeServer}/edit?configuration=${$deviceStore.device_name}.yaml`;
     const response = await fetch(url, {
     method: "POST", // *GET, POST, PUT, DELETE, etc.
     mode: "no-cors", // no-cors, *cors, same-origin
@@ -162,7 +157,7 @@ async function sendConfig(){
     });
   
     const windowOptions = "width=800,height=600";
-    window.open(serverUrl, "_blank", windowOptions);
+    window.open(esphomeServer, "_blank", windowOptions);
     console.log(response.text());
    
 }
@@ -200,9 +195,7 @@ async function sendConfig(){
         alwaysCollapsed={true}
         collapseSelection={true}
         inputId="controls"
-        ></Svelecte>        
-
-        
+        ></Svelecte>
     </div>
     <div>
         <TextInput

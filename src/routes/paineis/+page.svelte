@@ -40,7 +40,7 @@
             {/each}            
         </div>
         <div>
-            <DeviceEntitiesEditor entitiesIds={data.entities} deviceStore={currentStoreDevices[index]} />                           
+            <DeviceEntitiesEditor esphomeServer={data.esphomeServer} entitiesIds={data.entities} deviceStore={currentStoreDevices[index]} />                           
         </div>
     </Group>
 </Card>

@@ -1,15 +1,20 @@
 <script lang='ts'>
+    export const csr = true;
+    export const ssr = false;
     import { BUTTONSTATE, type Device, type Entity, type PanelButton } from '$lib/hassinterfaces';
     //TODO: dar a opção de login manual no home assistant para segurança getauth();
     //TODO: implementar .env para escolher entre auth manual x token
     import { HomeAssistantSocket } from '$lib/hasswebsockets';
     import ButtonPanel from '$lib/components/ButtonPanel.svelte';
-    import { Button, SimpleGrid, Space } from '@svelteuidev/core';
+    import DeviceEntitiesEditor from '$lib/components/DeviceEntitiesEditor.svelte';
+    import { Grid, Modal, Space } from '@svelteuidev/core';
+    import { writable, type Writable } from 'svelte/store';
     import CogOutline from 'svelte-material-icons/CogOutline.svelte';
 
     export let data: any;
     const buttonQuantity: number = 6;
     let panelButtons: {[buttonId:string] : PanelButton } = {};
+    let currentSelectedDevice: Writable<Device> ;
     const socket =  new HomeAssistantSocket(data.homeAssistantUrl,data.accessToken);
   
     
@@ -100,41 +105,53 @@
         } 
     }
     initializePanelButtons();
-</script>
 
+
+</script>
+<style>
+    .blue {
+        width: 100%;
+        height: 3vh; 
+        background-color: #0512ff;
+    }
+    .green{
+        width: 100%;
+        height: 3vh; 
+        background-color: #05ee05;
+    }
+    .orange{
+        width: 100%;
+        height: 3vh; 
+        background-color: #eeb805;
+    }
+</style>
 <h1>The websocket thing</h1>
-<SimpleGrid 
-    breakpoints={[
-        { maxWidth: 100, cols: 1, spacing: 'sm' },
-        { maxWidth: 50, cols: 1, spacing: 'sm' },
-        { maxWidth: 100, cols: 1, spacing: 'sm' }
-    ]}
-    cols={3}>
-    <div>
-        <ButtonPanel panelButton={panelButtons["button-1"]} buttonId={'button-1'} handleButton={handleButton} ></ButtonPanel> 
-    </div>
-    <div >
-            a 
-    </div>
-    <div>
-        <ButtonPanel panelButton={panelButtons["button-4"]} buttonId={'button-4'} handleButton={handleButton} ></ButtonPanel> 
-    </div>
-    <div>
-        <ButtonPanel panelButton={panelButtons["button-2"]} buttonId={'button-2'} handleButton={handleButton} ></ButtonPanel> 
-    </div>
-    <div  color='green'>
-        a 
-    </div>
-    <div>
-        <ButtonPanel panelButton={panelButtons["button-5"]} buttonId={'button-5'} handleButton={handleButton} ></ButtonPanel> 
-    </div>
-    <div>
-        <ButtonPanel panelButton={panelButtons["button-3"]} buttonId={'button-3'} handleButton={handleButton} ></ButtonPanel> 
-    </div>  
-    <div  color='green'>
-        a 
-    </div>      
-    <div>
-        <ButtonPanel panelButton={panelButtons["button-6"]} buttonId={'button-6'} handleButton={handleButton} ></ButtonPanel> 
-    </div>    
-</SimpleGrid>
+<Grid spacing="xs" grow={false}>
+    <Grid.Col span={5} >
+        <ButtonPanel entitiesIds={data.entities} esphomeServer={data.esphomeServer} panelButton={panelButtons["button-1"]} buttonId={'button-1'} handleButton={handleButton} ></ButtonPanel> 
+    </Grid.Col>
+    <Grid.Col span={1}>
+        <div class='orange' ></div>
+    </Grid.Col>
+    <Grid.Col span={5}>
+        <ButtonPanel entitiesIds={data.entities} esphomeServer={data.esphomeServer} panelButton={panelButtons["button-4"]} buttonId={'button-4'} handleButton={handleButton} ></ButtonPanel> 
+    </Grid.Col>
+    <Grid.Col span={5}>
+        <ButtonPanel entitiesIds={data.entities} esphomeServer={data.esphomeServer} panelButton={panelButtons["button-2"]} buttonId={'button-2'} handleButton={handleButton} ></ButtonPanel> 
+    </Grid.Col>
+    <Grid.Col span={1}>
+        <div class='green' ></div>
+    </Grid.Col>
+    <Grid.Col span={5}>
+        <ButtonPanel entitiesIds={data.entities} esphomeServer={data.esphomeServer} panelButton={panelButtons["button-5"]} buttonId={'button-5'} handleButton={handleButton} ></ButtonPanel> 
+    </Grid.Col>
+    <Grid.Col span={5}>
+        <ButtonPanel entitiesIds={data.entities} esphomeServer={data.esphomeServer} panelButton={panelButtons["button-3"]} buttonId={'button-3'} handleButton={handleButton} ></ButtonPanel> 
+    </Grid.Col>  
+    <Grid.Col span={1}>
+        <div class='blue' ></div>
+    </Grid.Col>      
+    <Grid.Col span={5}>
+        <ButtonPanel entitiesIds={data.entities} esphomeServer={data.esphomeServer} panelButton={panelButtons["button-6"]} buttonId={'button-6'} handleButton={handleButton} ></ButtonPanel> 
+    </Grid.Col>    
+</Grid>
