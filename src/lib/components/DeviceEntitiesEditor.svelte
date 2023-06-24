@@ -21,9 +21,9 @@
     const CONTROL_TYPE_GENERIC_TOGGLE: number = 1;
     const UNAVAILABLE_STATE: string = 'unavailable';
 
-    let controlType: Entity | undefined;
-    let controls: Entity | undefined;
-    let panelName: Entity | undefined;
+    let controlType: Entity;
+    let controls: Entity ;
+    let panelName: Entity ;
     let disableRelay: boolean | undefined;    
     let lightEntity: Entity | undefined;
     let yamlTxt: string = '';
@@ -36,60 +36,49 @@
         
         controlType = $deviceStore.device_entities.find((entity:Entity)=>{
             return entity.entity_id === `sensor.${$deviceStore.device_name}_control_type`;
-        });
-        if (!controlType){
-            controlType = {
+        }) || {
                 entity_id: `sensor.${$deviceStore.device_name}_control_type`,
                 state: controlTypes[CONTROL_TYPE_DISABLED],
                 attributes: [],
                 last_changed: '',
                 last_updated: ''
-            }
-            $deviceStore.device_entities.push(controlType);
-        }
+            } ;
+        $deviceStore.device_entities.push(controlType);
         controls = $deviceStore.device_entities.find((entity:Entity)=>{
             return entity.entity_id === `sensor.${$deviceStore.device_name}_controls`;
-        });        
-        
-        if (!controls){
-            controls = {
+        }) || {
                 entity_id: `sensor.${$deviceStore.device_name}_controls`,
                 state: '',
                 attributes: [],
                 last_changed: '',
                 last_updated: ''
-            }
-            $deviceStore.device_entities.push(controls);
-        }
+            } ;        
+        $deviceStore.device_entities.push(controls);
         arraySelectedEntites = controls.state.split(',');
 
         panelName = $deviceStore.device_entities.find((entity:Entity)=>{
             return entity.entity_id === `sensor.${$deviceStore.device_name}_panel_name`;
-        });        
-        if (!panelName){
-            panelName = {
+        }) || {
                 entity_id: `sensor.${$deviceStore.device_name}_panel_name`,
                 state: 'noName',
                 attributes: [],
                 last_changed: '',
                 last_updated: ''
-            }
+            } ;        
             $deviceStore.device_entities.push(panelName);
-        }
+        
 
         lightEntity = $deviceStore.device_entities.find((entity:Entity) => {
             return  entity.entity_id.startsWith('light');
-        } );
-        if (!lightEntity){
-            lightEntity = {
+        }) || {
                 entity_id: `light.${$deviceStore.device_name}_luz`,
                 state: UNAVAILABLE_STATE,
                 attributes: [],
                 last_changed: '',
                 last_updated: ''
-            }
+            } ;
             $deviceStore.device_entities.push(lightEntity);
-        }        
+                
         if (lightEntity.state === UNAVAILABLE_STATE) {
             disableRelay = true;
         }

@@ -3,6 +3,7 @@
     //TODO: dar a opção de login manual no home assistant para segurança getauth();
     //TODO: implementar .env para escolher entre auth manual x token
     import { HomeAssistantSocket } from '$lib/hasswebsockets';
+    import ButtonPanel from '$lib/components/ButtonPanel.svelte';
     import { Button, SimpleGrid, Space } from '@svelteuidev/core';
     import CogOutline from 'svelte-material-icons/CogOutline.svelte';
 
@@ -10,11 +11,7 @@
     const buttonQuantity: number = 6;
     let panelButtons: {[buttonId:string] : PanelButton } = {};
     const socket =  new HomeAssistantSocket(data.homeAssistantUrl,data.accessToken);
-    let buttonColors: {[colorId:string] : string } = {
-        [BUTTONSTATE.AVAILABLE]: "green",
-        [BUTTONSTATE.SEARCHING]: "yellow",
-        [BUTTONSTATE.REGISTERED]: "blue"
-    };
+  
     
     function getEntitiesToWatch(){
         const entities: string[] = [];
@@ -40,14 +37,6 @@
         }
         return null;
     }
-
-    
-    function sub(){
-        socket.subscribeToStateTrigger( getEntitiesToWatch(), 
-            (e) =>{console.log(getDeviceFromEntity(e.variables.trigger.entity_id),
-                'from callback')});
-    }
-    
     
     function initializePanelButtons(){
         for (let index = 1; index < buttonQuantity+1; index++) {                        
@@ -55,27 +44,24 @@
                 device: null,
                 panelArea: '',
                 panelName: '',
-                buttonId: '',
+                buttonPos: index,
                 buttonState: BUTTONSTATE.AVAILABLE,
             };
         }
     }
-    initializePanelButtons();
-    function handleSearch(result:any, listener: any ){
-        console.log(result, 'no callback');
-        const device = getDeviceFromEntity(result.variables.trigger.entity_id);
-        
+    
+    function handleSearch(result:any, listener: any ){        
+        const device = getDeviceFromEntity(result.variables.trigger.entity_id);        
         Object.keys(panelButtons).forEach(chave => {
             if (panelButtons[chave].buttonState == BUTTONSTATE.SEARCHING) {
-                panelButtons[chave].device = device;
+                panelButtons[chave].device = device;                
                 panelButtons[chave].buttonState = BUTTONSTATE.REGISTERED;                
             }
-        });
-        //TODO: search for BUTTONSTATE.searching and change state to BUTTONSTATE.registered
+        });        
         enableHtmlButtons();
-        socket.socket.removeEventListener('message',listener);
-    
+        socket.socket.removeEventListener('message',listener);    
     }
+
     function handleButton(e:any){
         const selectedButton = panelButtons[e.target.id];
         switch (selectedButton.buttonState) {
@@ -83,8 +69,7 @@
                 //start searching                
                 disableHtmlButtons();                
                 selectedButton.buttonState = BUTTONSTATE.SEARCHING;
-                panelButtons = panelButtons;
-                buttonColors = buttonColors;                
+                panelButtons = panelButtons;                                
                 socket.subscribeToStateTrigger( getEntitiesToWatch(), 
                         handleSearch);                
                 break;
@@ -99,148 +84,57 @@
             default:
                 break;
         }                        
-        
-
-        console.log(selectedButton);
     }
+
     function disableHtmlButtons(){
         for (let index = 1; index < buttonQuantity+1; index++){
             const button = document.getElementById(`button-${index}`);
             button!.setAttribute('disabled','true');
         }
     }
+
     function enableHtmlButtons(){
         for (let index = 1; index < buttonQuantity+1; index++){
             const button = document.getElementById(`button-${index}`);
             button!.removeAttribute('disabled');
         } 
     }
-
+    initializePanelButtons();
 </script>
 
 <h1>The websocket thing</h1>
-<SimpleGrid cols={2}>
+<SimpleGrid 
+    breakpoints={[
+        { maxWidth: 100, cols: 1, spacing: 'sm' },
+        { maxWidth: 50, cols: 1, spacing: 'sm' },
+        { maxWidth: 100, cols: 1, spacing: 'sm' }
+    ]}
+    cols={3}>
     <div>
-        <Button 
-            loading={panelButtons["button-1"].buttonState === BUTTONSTATE.SEARCHING}
-            fullSize            
-            color={buttonColors[panelButtons["button-1"].buttonState]} 
-            on:click={handleButton} 
-            id="button-1" 
-            radius="md">
-            1 {panelButtons["button-1"].device ? ' - ' + panelButtons["button-1"].device?.device_name : '' }
-        </Button> 
-        {#if panelButtons["button-1"].buttonState === BUTTONSTATE.REGISTERED }
-            <Space h={10}></Space>
-            <Button
-                fullSize            
-                color={buttonColors[panelButtons["button-1"].buttonState]} 
-                radius="md">
-                Configure
-            </Button>
-        {/if}
+        <ButtonPanel panelButton={panelButtons["button-1"]} buttonId={'button-1'} handleButton={handleButton} ></ButtonPanel> 
+    </div>
+    <div >
+            a 
     </div>
     <div>
-        <Button 
-            loading={panelButtons["button-4"].buttonState === BUTTONSTATE.SEARCHING}
-            fullSize
-            color={buttonColors[panelButtons["button-4"].buttonState]} 
-            on:click={handleButton} 
-            id="button-4" 
-            radius="md">
-            4 {panelButtons["button-4"].device ? ' - ' + panelButtons["button-4"].device?.device_name : '' }
-        </Button>    
-        {#if panelButtons["button-4"].buttonState === BUTTONSTATE.REGISTERED }
-            <Space h={10}></Space>
-            <Button
-                fullSize            
-                color={buttonColors[panelButtons["button-4"].buttonState]} 
-                radius="md">
-                Configure
-            </Button>
-        {/if}        
+        <ButtonPanel panelButton={panelButtons["button-4"]} buttonId={'button-4'} handleButton={handleButton} ></ButtonPanel> 
     </div>
     <div>
-        <Button 
-            loading={panelButtons["button-2"].buttonState === BUTTONSTATE.SEARCHING}
-            fullSize
-            color={buttonColors[panelButtons["button-2"].buttonState]} 
-            on:click={handleButton} 
-            id="button-2" 
-            radius="md">
-            2 {panelButtons["button-2"].device ? ' - ' + panelButtons["button-2"].device?.device_name : '' }
-        </Button>
-        {#if panelButtons["button-2"].buttonState === BUTTONSTATE.REGISTERED }
-            <Space h={10}></Space>
-            <Button
-                fullSize            
-                color={buttonColors[panelButtons["button-2"].buttonState]} 
-                radius="md">
-                Configure
-            </Button>
-        {/if}        
+        <ButtonPanel panelButton={panelButtons["button-2"]} buttonId={'button-2'} handleButton={handleButton} ></ButtonPanel> 
+    </div>
+    <div  color='green'>
+        a 
     </div>
     <div>
-        <Button 
-            loading={panelButtons["button-5"].buttonState === BUTTONSTATE.SEARCHING}
-            fullSize
-            color={buttonColors[panelButtons["button-5"].buttonState]} 
-            on:click={handleButton} 
-            id="button-5" 
-            radius="md">
-            5 {panelButtons["button-5"].device ? ' - ' + panelButtons["button-5"].device?.device_name : '' }
-        </Button>
-        {#if panelButtons["button-5"].buttonState === BUTTONSTATE.REGISTERED }
-            <Space h={10}></Space>
-            <Button
-                fullSize            
-                color={buttonColors[panelButtons["button-5"].buttonState]} 
-                radius="md">
-                Configure
-            </Button>
-        {/if}        
+        <ButtonPanel panelButton={panelButtons["button-5"]} buttonId={'button-5'} handleButton={handleButton} ></ButtonPanel> 
     </div>
     <div>
-        <Button 
-            loading={panelButtons["button-3"].buttonState === BUTTONSTATE.SEARCHING}
-            fullSize
-            color={buttonColors[panelButtons["button-3"].buttonState]} 
-            on:click={handleButton} 
-            id="button-3" 
-            radius="md">
-            3 {panelButtons["button-3"].device ? ' - ' + panelButtons["button-3"].device?.device_name : '' }
-        </Button>
-        {#if panelButtons["button-3"].buttonState === BUTTONSTATE.REGISTERED }
-            <Space h={10}></Space>
-            <Button
-                fullSize            
-                color={buttonColors[panelButtons["button-3"].buttonState]} 
-                radius="md">
-                Configure
-            </Button>
-        {/if}        
-    </div>
+        <ButtonPanel panelButton={panelButtons["button-3"]} buttonId={'button-3'} handleButton={handleButton} ></ButtonPanel> 
+    </div>  
+    <div  color='green'>
+        a 
+    </div>      
     <div>
-        <Button 
-            loading={panelButtons["button-6"].buttonState === BUTTONSTATE.SEARCHING}
-            fullSize            
-            color={buttonColors[panelButtons["button-6"].buttonState]} 
-            on:click={handleButton} 
-            id="button-6" 
-            radius="md">
-            6 
-        </Button>
-        {#if panelButtons["button-6"].buttonState === BUTTONSTATE.REGISTERED }
-            <Space h={10}></Space>
-            <Button
-                fullSize            
-                color={buttonColors[panelButtons["button-6"].buttonState]} 
-                radius="md">
-                Configure
-            </Button>
-        {/if}         
+        <ButtonPanel panelButton={panelButtons["button-6"]} buttonId={'button-6'} handleButton={handleButton} ></ButtonPanel> 
     </div>    
 </SimpleGrid>
-<Space  h={30}></Space>
-
-<Button on:click={sub}>get</Button>

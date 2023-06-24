@@ -29,7 +29,7 @@ export interface PanelButton {
     device: Device | null;
     panelName: string;
     panelArea: string;
-    buttonId:  string ;
+    buttonPos:  number ;
     buttonState: BUTTONSTATE;
 }
 export const deviceCapabilities = {
