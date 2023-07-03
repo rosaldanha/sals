@@ -37,7 +37,7 @@
     on:click={handleButton} 
     id={buttonId}
     radius="md">
-    {panelButton.buttonPos} {panelButton.device ? ' - ' + panelButton.device?.device_name : '' }
+    {panelButton.buttonPos} {panelButton.device.device_id !== '' ? ' - ' + panelButton.device?.device_name : '' }
 </Button> 
 {#if panelButton.buttonState === BUTTONSTATE.REGISTERED }
     <Space h={10}></Space>
@@ -51,6 +51,13 @@
     </Button>
 {/if}
 
-<Modal size="full" {opened} target={'body'} on:close={closeModal} title="Configure Device">
+<Modal 
+    overlayOpacity={0.55} 
+    overlayBlur={3} 
+    size="400px" 
+    {opened} 
+    target={'body'} 
+    on:close={closeModal} 
+    title={`Device: ${panelButton.device.device_name}`}>
 	<DeviceEntitiesEditor esphomeServer={esphomeServer} deviceStore={deviceStore}  entitiesIds={entitiesIds} ></DeviceEntitiesEditor>
 </Modal>

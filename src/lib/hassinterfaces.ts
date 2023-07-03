@@ -26,7 +26,7 @@ export enum BUTTONSTATE {
 }
 
 export interface PanelButton {
-    device: Device | null;
+    device: Device ;
     panelName: string;
     panelArea: string;
     buttonPos:  number ;
@@ -39,3 +39,4 @@ export const deviceCapabilities = {
 }
 
 export const deviceViewSettingsClickEvent = 'deviceViewSettingsClickEvent';
+export const deviceIsSearching = 'deviceIsSearching';

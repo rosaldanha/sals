@@ -1,14 +1,13 @@
 <script lang='ts'>
-    export const csr = true;
-    export const ssr = false;
+    
     import { BUTTONSTATE, type Device, type Entity, type PanelButton } from '$lib/hassinterfaces';
     //TODO: dar a opção de login manual no home assistant para segurança getauth();
     //TODO: implementar .env para escolher entre auth manual x token
     import { HomeAssistantSocket } from '$lib/hasswebsockets';
     import ButtonPanel from '$lib/components/ButtonPanel.svelte';
     import DeviceEntitiesEditor from '$lib/components/DeviceEntitiesEditor.svelte';
-    import { Grid, Modal, Space } from '@svelteuidev/core';
-    import { writable, type Writable } from 'svelte/store';
+    import { Grid, Modal, Space, TextInput } from '@svelteuidev/core';
+    import type { Writable } from 'svelte/store';
     import CogOutline from 'svelte-material-icons/CogOutline.svelte';
 
     export let data: any;
@@ -30,8 +29,7 @@
         }
         return entities;
     }
-
-    function getDeviceFromEntity(entityId:string):Device|null {
+    function getDeviceFromEntity(entityId:string):Device {
         for (const device of data.devices) {
             const entity = device.device_entities.find((element:Entity) => {
                 return element.entity_id === entityId;
@@ -40,13 +38,23 @@
                 return device;
             }
         }
-        return null;
+        return {
+            device_area: '',
+            device_id: '',
+            device_name: '',
+            device_entities: []
+        };
     }
     
     function initializePanelButtons(){
         for (let index = 1; index < buttonQuantity+1; index++) {                        
             panelButtons[`button-${index}`] = {
-                device: null,
+                device: {
+                    device_id: '',
+                   device_name: '',
+                    device_area: '',
+                    device_entities: []
+                },
                 panelArea: '',
                 panelName: '',
                 buttonPos: index,
@@ -56,7 +64,7 @@
     }
     
     function handleSearch(result:any, listener: any ){        
-        const device = getDeviceFromEntity(result.variables.trigger.entity_id);        
+        const device: Device  = getDeviceFromEntity(result.variables.trigger.entity_id);        
         Object.keys(panelButtons).forEach(chave => {
             if (panelButtons[chave].buttonState == BUTTONSTATE.SEARCHING) {
                 panelButtons[chave].device = device;                
@@ -126,7 +134,11 @@
     }
 </style>
 <h1>The websocket thing</h1>
+
 <Grid spacing="xs" grow={false}>
+    <Grid.Col span={11}>
+        <TextInput label='Panel Name'></TextInput>
+    </Grid.Col>
     <Grid.Col span={5} >
         <ButtonPanel entitiesIds={data.entities} esphomeServer={data.esphomeServer} panelButton={panelButtons["button-1"]} buttonId={'button-1'} handleButton={handleButton} ></ButtonPanel> 
     </Grid.Col>

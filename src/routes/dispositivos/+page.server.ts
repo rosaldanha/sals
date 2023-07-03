@@ -1,4 +1,4 @@
-import {getEsphomeDevices} from '$lib/server/hassfunctions.server.js';
+import {getEsphomeDevices} from '$lib/server/hassfunctions.js';
 
 
 /** @type {import('./$types').PageServerLoad} */

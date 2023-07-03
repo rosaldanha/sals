@@ -11,7 +11,7 @@ export class HomeAssistantSocket {
     constructor(homeassistantUrl:string, homeassistantToken :string ){
         this.homeassistantUrl = homeassistantUrl;
         this.homeassistantToken = homeassistantToken;
-        this.socket = this.getConnection();
+        this.socket = this.getConnection(); 
     }
 
 
@@ -37,7 +37,7 @@ export class HomeAssistantSocket {
                     access_token: this.homeassistantToken,
                 })
             );
-        }
+        }        
         return socket;
     }
     
@@ -50,6 +50,7 @@ export class HomeAssistantSocket {
     }
     
     public subscribeToStateTrigger(entities: string[],callback:  ( event: any, listener: any) => any){
+        
         const subscribeYaml = `
             {
                 "id": ${this.subscribeToMessageId},
@@ -72,9 +73,9 @@ export class HomeAssistantSocket {
                 }
             }
         };
-       this.socket.addEventListener('message',listener);
-        
-        this.socket.send(subscribeYaml);
+        this.socket.readyState 
+       this.socket.addEventListener('message',listener);        
+       this.socket.send(subscribeYaml);
     }
     
 

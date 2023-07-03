@@ -5,7 +5,7 @@
     import DeviceView from '$lib/components/DeviceView.svelte';
    
     export let data: any;
-    // console.log(data,'dispositivos')
+    //log(data,'dispositivos')
     const isDebugging = true;
 
     

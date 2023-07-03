@@ -2,21 +2,20 @@
 <script lang='ts'>
     export const csr = true;
     export const ssr = false;
-    import type {Device, Entity} from '$lib/hassinterfaces.js'
-    import {  Button, Checkbox, NativeSelect, SimpleGrid, Space, TextInput } from '@svelteuidev/core';
-    
+    import type {Device, Entity} from '$lib/hassinterfaces.js';
+    import {log} from '$lib/logger';
+
+    import {  Button, Checkbox, NativeSelect, Tabs, Space, TextInput, Stack } from '@svelteuidev/core';    
     import Svelecte from 'svelecte';
+
     import {afterUpdate} from 'svelte';
     import type {Writable} from 'svelte/store';
-    import { io } from 'socket.io-client';
-  
-    //import {getEntities} from '$lib/server/hassfunctions.server';
     
     import YAML from 'yaml';
     export let deviceStore: Writable<Device>;
     export let entitiesIds: string[];
     export let esphomeServer: string;
-    //export let entities: string[];
+    
     const controlTypes: string[] = ["disabled","generic_toggle"]
     const CONTROL_TYPE_DISABLED: number = 0;
     const CONTROL_TYPE_GENERIC_TOGGLE: number = 1;
@@ -25,55 +24,44 @@
     let controlType: Entity;
     let controls: Entity ;
     let panelName: Entity ;
+    let buttonPos: Entity;
     let disableRelay: boolean | undefined;    
     let lightEntity: Entity | undefined;
     let yamlTxt: string = '';
     let arraySelectedEntites: string[];
-
-    function prepareDeviceWithDefaults(){
-        controlType = $deviceStore.device_entities.find((entity:Entity)=>{
-            return entity.entity_id === `sensor.${$deviceStore.device_name}_control_type`;
-        }) || {
-                entity_id: `sensor.${$deviceStore.device_name}_control_type`,
-                state: controlTypes[CONTROL_TYPE_DISABLED],
+    function getEmptyEntityObj(entityId:string, defaultState:string ):Entity{
+        return {
+                entity_id: entityId,
+                state: defaultState,
                 attributes: [],
                 last_changed: '',
                 last_updated: ''
             } ;
+    }
+    function getEntityObj(entityId:string, defaultState:string ):Entity{
+        return $deviceStore.device_entities.find((entity:Entity)=>{
+            return entity.entity_id === entityId;
+        }) || getEmptyEntityObj(entityId, defaultState);
+    }
+    function prepareDeviceWithDefaults(){
+
+        controlType = getEntityObj(`sensor.${$deviceStore.device_name}_control_type`, controlTypes[CONTROL_TYPE_DISABLED]);
         $deviceStore.device_entities.push(controlType);
-        controls = $deviceStore.device_entities.find((entity:Entity)=>{
-            return entity.entity_id === `sensor.${$deviceStore.device_name}_controls`;
-        }) || {
-                entity_id: `sensor.${$deviceStore.device_name}_controls`,
-                state: '',
-                attributes: [],
-                last_changed: '',
-                last_updated: ''
-            } ;        
+      
+        controls = getEntityObj(`sensor.${$deviceStore.device_name}_controls`, '');       
         $deviceStore.device_entities.push(controls);
         arraySelectedEntites = controls.state.split(',');
 
-        panelName = $deviceStore.device_entities.find((entity:Entity)=>{
-            return entity.entity_id === `sensor.${$deviceStore.device_name}_panel_name`;
-        }) || {
-                entity_id: `sensor.${$deviceStore.device_name}_panel_name`,
-                state: 'noName',
-                attributes: [],
-                last_changed: '',
-                last_updated: ''
-            } ;        
+        panelName = getEntityObj(`sensor.${$deviceStore.device_name}_panel_name`, 'noName' );  
         $deviceStore.device_entities.push(panelName);
+
+        buttonPos = getEntityObj(`sensor.${$deviceStore.device_name}_button_pos`,'-1');
+        $deviceStore.device_entities.push(buttonPos);
+
         lightEntity = $deviceStore.device_entities.find((entity:Entity) => {
             return  entity.entity_id.startsWith('light');
-        }) || {
-                entity_id: `light.${$deviceStore.device_name}_luz`,
-                state: UNAVAILABLE_STATE,
-                attributes: [],
-                last_changed: '',
-                last_updated: ''
-            } ;
-            $deviceStore.device_entities.push(lightEntity);
-                
+        }) || getEmptyEntityObj( `light.${$deviceStore.device_name}_luz`, UNAVAILABLE_STATE);
+        $deviceStore.device_entities.push(lightEntity);
         if (lightEntity.state === UNAVAILABLE_STATE) {
             disableRelay = true;
         }
@@ -114,7 +102,8 @@
                 device_name: $deviceStore.device_name,                       
                 control_type: controlType?.state ,
                 isRelayDisabled: `${disableRelay}`,
-                panel_name: panelName?.state,            
+                panel_name: panelName?.state,
+                button_pos: buttonPos.state            
             }},
             {
                 defaultStringType: 'QUOTE_DOUBLE',
@@ -127,51 +116,56 @@
         yamlTxt += `  control_list: "${controls_state}"\n`
         yamlTxt += buildComments();   
         yamlTxt += '\n<<: !include common/smr2.yaml'
-        //console.log(yamlTxt)
-
     }
+
     deviceStore.subscribe(()=>{
         prepareDeviceWithDefaults();    
     });
 
-    
     afterUpdate(()=>{
             // prepareDeviceWithDefaults();  
         createConfig();      
     });
-async function sendConfig(){
-    
 
-    const url = `${esphomeServer}/edit?configuration=${$deviceStore.device_name}.yaml`;
-    const response = await fetch(url, {
-    method: "POST", // *GET, POST, PUT, DELETE, etc.
-    mode: "no-cors", // no-cors, *cors, same-origin
-    cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
-    
-    headers: {
-      "Content-Type": "application/json",
-      // 'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    referrerPolicy: "no-referrer", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
-    body: yamlTxt, // body data type must match "Content-Type" header
-    });
-  
-    const windowOptions = "width=800,height=600";
-    window.open(esphomeServer, "_blank", windowOptions);
-    console.log(response.text());
-   
-}
+    async function sendConfig(){
+        const url = `${esphomeServer}/edit?configuration=${$deviceStore.device_name}.yaml`;
+        const response = await fetch(url, {
+                method: "POST", 
+                mode: "no-cors",
+                cache: "no-cache",                
+                headers: {
+                "Content-Type": "application/json",
+                },
+                referrerPolicy: "no-referrer", 
+                body: yamlTxt, 
+            });    
+        const windowOptions = "width=800,height=600";
+        window.open(esphomeServer, "_blank", windowOptions);
+        log(response.text());   
+    }
+    function uploadFirmware(){
+        alert('Not Implemented wait!');
+    }
 </script>
 <!-- a -->
 <style>
     textarea {
         overflow: auto;
         white-space: pre;
+        width: 100%;
     }
 </style>
-<SimpleGrid cols={3} spacing="lg" >
-    <div>
-        <h2>{$deviceStore.device_name}</h2>       
+<Tabs grow>
+    <Tabs.Tab label={$deviceStore.device_name} >
+        <Stack override={{ height: 350 }}  align="strech" spacing="xs">
+        <Checkbox
+         label="Local Relay Disabled"
+         color="dark"
+         radius="sm"
+         size='sm'
+         bind:checked={disableRelay}     
+         on:change={onDisableChange}   
+         />
         <NativeSelect data={controlTypes}
         bind:value={controlType.state}        
         label="Control Type"
@@ -196,27 +190,23 @@ async function sendConfig(){
         collapseSelection={true}
         inputId="controls"
         ></Svelecte>
-    </div>
-    <div>
         <TextInput
         label="Panel name"
-        description = "Where this device is ?"
-        bind:value={panelName.state}        
+        bind:value={panelName.state}
+        readonly
         />
-        <Space h='xs'></Space>
-        <Checkbox
-         label="Local Relay Disabled"
-         color="dark"
-         radius="lg"
-         size='md'
-         bind:checked={disableRelay}     
-         on:change={onDisableChange}   
-         />
-         <!-- <Space h='xs'></Space>
-         <Button color='dark' on:click={createConfig}>Create Config</Button> -->
-    </div>
-    <div>
-        <textarea style="border-radius: 5%;" readonly id={$deviceStore.device_id}  bind:value={yamlTxt} rows="15" cols="35"></textarea>
-        <Button color='dark' on:click={sendConfig}>Send Config Esphome</Button>
-    </div>    
-</SimpleGrid>
+        <TextInput
+        label="Button Postion"
+        bind:value={buttonPos.state}
+        readonly
+        />        
+        </Stack>
+    </Tabs.Tab>
+    <Tabs.Tab label='Upload'>
+        <Stack override={{ height: 350 }}  align="strech" spacing="xs">
+            <textarea style="border-radius: 1%;" readonly id={$deviceStore.device_id}  bind:value={yamlTxt} rows="15" cols="35"></textarea>
+            <Button fullSize color='dark' on:click={sendConfig}>Send Config Esphome</Button>
+            <Button fullSize color='dark' on:click={uploadFirmware}>Upload Firmware</Button>
+        </Stack>
+    </Tabs.Tab>
+</Tabs>
