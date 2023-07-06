@@ -5,11 +5,11 @@
     import AccessPointNetworkOff from 'svelte-material-icons/AccessPointNetworkOff.svelte';    
     import CogOutline from 'svelte-material-icons/CogOutline.svelte';
     import HomeSearchOutline from 'svelte-material-icons/HomeSearchOutline.svelte';
+   
     import type {Device, Entity} from '$lib/hassinterfaces.js';
     import { HomeAssistantSocket } from '$lib/hasswebsockets';
     import {log,error} from '$lib/logger';
-    import {deviceIsSearching,deviceViewSettingsClickEvent} from '$lib/hassinterfaces.js'
-    import { fix_and_destroy_block } from 'svelte/internal';
+    import {deviceIsSearching,deviceViewSettingsClickEvent} from '$lib/hassinterfaces.js';    
     //import { buildDeviceObj } from '$lib/hassfunctions';
 
 

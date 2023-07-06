@@ -132,6 +132,35 @@ export async function getEsphomeDevices(){
       devices:devices
     };
 }
+function getDeviceButtonPos(device:Device):number{
+  const deviceButtonPos: Entity = device.device_entities.find((entity) =>{
+      return entity.entity_id === `sensor.${device.device_name}_button_pos`;
+  }) || {
+    entity_id: '',
+    state: '-1',
+    attributes: [],
+    last_changed: '',
+    last_updated: ''
+  } ;
+  return parseInt(deviceButtonPos.state);
+}
+export async function getPanelByName(panelName:string) {
+  const { devices } = await getEsphomeDevices();
+  const panelToReturn: Panel = {
+    panel_area: '',
+    panel_name: panelName,
+    devices: getEmptyDeviceArray()    
+  } ;
+  devices.forEach(device => {    
+    const entity_panel = device.device_entities.find((entity)=>{
+      return entity.entity_id === `sensor.${device.device_name}_panel_name`
+    });
+    if ( entity_panel &&  entity_panel?.state === panelName ){
+      panelToReturn.devices[getDeviceButtonPos(device)] = device;
+    }
+  });
+  return panelToReturn;  
+}
 export async function getPanels() {
   const { devices } = await getEsphomeDevices();
   const panelDictionary: Map<string, Panel> = new Map();  
@@ -160,18 +189,6 @@ export async function getPanels() {
       }
     }    
   });
-  function getDeviceButtonPos(device:Device):number{
-    const deviceButtonPos: Entity = device.device_entities.find((entity) =>{
-        return entity.entity_id === `sensor.${device.device_name}_button_pos`;
-    }) || {
-      entity_id: '',
-      state: '-1',
-      attributes: [],
-      last_changed: '',
-      last_updated: ''
-    } ;
-    return parseInt(deviceButtonPos.state);
-  }
   const panels: Panel[] = [];
   panelDictionary.forEach((pnl)=>{
     panels.push(pnl);

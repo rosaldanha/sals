@@ -3,6 +3,7 @@ import { Container, Card, Grid, Center, Space } from '@svelteuidev/core';
 import DeviceView from './DeviceView.svelte';
 import DeviceEntitiesEditor from './DeviceEntitiesEditor.svelte';
 import type {  Device,  Panel } from '$lib/hassinterfaces.js';
+import { getEmptyDevice } from '$lib/hassinterfaces';
 import  { writable, type Writable } from 'svelte/store';
 
 export let panel: Panel;
@@ -16,6 +17,7 @@ export let homeAssistantUrl: string;
 
 let currentStoreDevice: Writable<Device>;
 let disabled: boolean| undefined = undefined;
+let selectedButtonPos:number = 0;
 const sizes = {
         xs: 440,
         sm: 720,
@@ -29,17 +31,11 @@ const buttonPosition = [
     {l:2,r:5}
 ] 
 
-function getEmptyDevice():Device{
-    return {
-        device_id: '',
-        device_name: '',
-        device_area: '',
-        device_entities: []
-    }
-}
+
 
 function setupFunc(e:any){
     currentStoreDevice.set(panel.devices[e.detail.index]);
+    selectedButtonPos = e.detail.index;
 }
 currentStoreDevice = writable(panel.devices[0]);
 function preparePanel(){    
@@ -50,6 +46,10 @@ function preparePanel(){
 function configureButtonForSearch(e:any) {
         disabled = e.detail.isSearching;
         //on:deviceIsSearching={configureButtonForSearch}
+}
+function onDeviceUpdated(e:any) {    
+    currentStoreDevice.set(e.detail.device);
+    panel.devices[selectedButtonPos] = e.detail.device;
 }
 preparePanel();
 </script>
@@ -66,7 +66,7 @@ preparePanel();
                     {#each buttonPosition as pos, idx}
                         <Grid.Col span={6}>                            
                             <DeviceView 
-                                on:deviceIsSearching={configureButtonForSearch}
+                                on:deviceIsSearching={configureButtonForSearch}                                
                                 {disabled}
                                 panel={panel}
                                 accessToken={accessToken}
@@ -92,7 +92,12 @@ preparePanel();
                 </Grid>
             </Grid.Col>
             <Grid.Col span={7} >
-                <DeviceEntitiesEditor esphomeServer={esphomeServer} entitiesIds={entities} deviceStore={currentStoreDevice} />                           
+                <DeviceEntitiesEditor 
+                    devicePos={selectedButtonPos}
+                    esphomeServer={esphomeServer} 
+                    entitiesIds={entities} 
+                    deviceStore={currentStoreDevice}
+                    on:deviceUpdated={onDeviceUpdated} />                           
             </Grid.Col>
         </Grid>
     </Card>

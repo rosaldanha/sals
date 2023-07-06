@@ -10,11 +10,16 @@
 
     import {afterUpdate} from 'svelte';
     import type {Writable} from 'svelte/store';
-    
     import YAML from 'yaml';
+    import { createEventDispatcher } from 'svelte';
+    import Delete from 'svelte-material-icons/Delete.svelte';
+    import { deviceUpdated, getEmptyDevice } from '$lib/hassinterfaces';
+    import {EspHomeWebSockets} from '$lib/esphomewebsockets';
+
     export let deviceStore: Writable<Device>;
     export let entitiesIds: string[];
     export let esphomeServer: string;
+    export let devicePos: number;
     
     const controlTypes: string[] = ["disabled","generic_toggle"]
     const CONTROL_TYPE_DISABLED: number = 0;
@@ -29,6 +34,8 @@
     let lightEntity: Entity | undefined;
     let yamlTxt: string = '';
     let arraySelectedEntites: string[];
+
+    const dispatch = createEventDispatcher();
     function getEmptyEntityObj(entityId:string, defaultState:string ):Entity{
         return {
                 entity_id: entityId,
@@ -144,7 +151,20 @@
         log(response.text());   
     }
     function uploadFirmware(){
-        alert('Not Implemented wait!');
+        const espHomeWebSockets:EspHomeWebSockets =  
+                 new EspHomeWebSockets('https://esphome.sal.net.br/run',
+                   'smr2010',
+                   (e) => {console.log(e);});        
+    }
+    function removeButton() {
+        if (confirm('Confirm to remove the device?')) {
+            const tmpDevice = getEmptyDevice();
+            dispatch(deviceUpdated,{
+                device: tmpDevice,
+                pos: devicePos,
+            } )
+        }
+        
     }
 </script>
 <!-- a -->
@@ -157,7 +177,7 @@
 </style>
 <Tabs grow>
     <Tabs.Tab label={$deviceStore.device_name} >
-        <Stack override={{ height: 350 }}  align="strech" spacing="xs">
+        <Stack override={{ height: 380 }}  align="strech" spacing="xs">
         <Checkbox
          label="Local Relay Disabled"
          color="dark"
@@ -199,12 +219,19 @@
         label="Button Postion"
         bind:value={buttonPos.state}
         readonly
-        />        
+        />
+        <span></span>
         </Stack>
+        <Button color='dark' 
+            disabled={$deviceStore.device_name === ''}
+            on:click={removeButton}
+            >
+            <Delete width="md" ></Delete>
+        </Button> 
     </Tabs.Tab>
     <Tabs.Tab label='Upload'>
-        <Stack override={{ height: 350 }}  align="strech" spacing="xs">
-            <textarea style="border-radius: 1%;" readonly id={$deviceStore.device_id}  bind:value={yamlTxt} rows="15" cols="35"></textarea>
+        <Stack override={{ height: 380 }}  align="normal" spacing="xs">
+            <textarea style="border-radius: 1%;" readonly id={$deviceStore.device_id}  bind:value={yamlTxt} rows="30" cols="35"></textarea>
             <Button fullSize color='dark' on:click={sendConfig}>Send Config Esphome</Button>
             <Button fullSize color='dark' on:click={uploadFirmware}>Upload Firmware</Button>
         </Stack>

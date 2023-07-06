@@ -14,7 +14,8 @@
 
 
 envia comando
-{'type':'spawn','configuration':'smr2010.yaml','port':'OTA'}
+
+{"type":"spawn","configuration":"smr2010.yaml","port":"OTA"}
 
 recebe resposta:
 

@@ -37,6 +37,17 @@ export const deviceCapabilities = {
     switch: 'SWITCH',
     offline: 'OFFLINE'
 }
+export function getEmptyDevice():Device{
+    return {
+        device_id: '',
+        device_name: '',
+        device_area: '',
+        device_entities: []
+    }
+}
+
+
 
 export const deviceViewSettingsClickEvent = 'deviceViewSettingsClickEvent';
 export const deviceIsSearching = 'deviceIsSearching';
+export const deviceUpdated = 'deviceUpdated';
