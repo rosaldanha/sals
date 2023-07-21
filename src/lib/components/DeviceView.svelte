@@ -8,9 +8,10 @@
    
     import type {Device, Entity} from '$lib/hassinterfaces.js';
     import { HomeAssistantSocket } from '$lib/hasswebsockets';
-    import {log,error} from '$lib/logger';
+    import {log,logF} from '$lib/logger';
     import {deviceIsSearching,deviceViewSettingsClickEvent} from '$lib/hassinterfaces.js';    
     //import { buildDeviceObj } from '$lib/hassfunctions';
+    import LedIcon from '$lib/components/LedIcon.svelte';
 
 
     export let device: Device;   
@@ -20,7 +21,8 @@
     export let accessToken: string;
     export let panel:any;
     export let disabled: boolean|undefined = undefined;
-
+    logF('load deviceView device:',device);
+   // logF('deviceView FirstLoad panel:',panel);
     
     const iconSize = "1.5em";
     let dispatch = createEventDispatcher();
@@ -87,7 +89,7 @@
             dispatch(deviceViewSettingsClickEvent,  {device, index});
         }        
     }
-
+    logF('end deviceView device:',device);
 </script>
 <Grid spacing='xs'   >
     {#if device.device_name === ''}

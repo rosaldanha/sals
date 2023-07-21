@@ -1,4 +1,4 @@
-import type { Device, Entity, Panel } from '$lib/hassinterfaces.js';
+import type { Device, Entity, Panel } from '$lib/hassinterfaces';
 import {log,error} from '$lib/logger';
 import { env } from '$env/dynamic/public';
 
@@ -26,6 +26,7 @@ export async function getEntityState(entityId:string){
   } catch (e) {
       error(e);
   }
+  console.log('getEntityState',entityState)
   return entityState;
 }
 
@@ -71,7 +72,8 @@ async function getDeviceName(entityId:string):Promise<string> {
 }
 async function getDeviceEntities(deviceId:string){
     const template = `{{ device_entities('${deviceId}') | to_json }}`
-    let entitiesTxt = await getTemplateResolved(template);    
+    let entitiesTxt = await getTemplateResolved(template);
+    
     return entitiesTxt;
 }
 async function getDeviceArea(deviceId:string) {
@@ -100,6 +102,7 @@ export async function buildDeviceObj(entityId:string):Promise<Device> {
     device_id : deviceId,
     device_name: deviceName,
     device_area: deviceArea,
+    device_config: '', //TODO: build config here ? create a common function ?
     device_entities: tmpEntitiesStates
   }; 
 
@@ -184,7 +187,7 @@ export async function getPanels() {
         //tmpPanel.devices[]
         tmpPanel.devices[getDeviceButtonPos(device)] = device;
         panelDictionary.set(entity_panel.state, tmpPanel);
-        console.log(panelDictionary);
+        //console.log(panelDictionary);
         //[device]
       }
     }    
@@ -193,7 +196,6 @@ export async function getPanels() {
   panelDictionary.forEach((pnl)=>{
     panels.push(pnl);
   });
-
   return panels;
 }
 function getEmptyDevice():Device {
@@ -201,6 +203,7 @@ function getEmptyDevice():Device {
     device_id: '',
     device_name: '',
     device_area: '',
+    device_config: '',
     device_entities: []
   }
 }

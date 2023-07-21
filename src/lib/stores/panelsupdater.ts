@@ -2,7 +2,8 @@ import { writable, type Writable } from "svelte/store";
 export enum STATUS {
     RUNNING = "running",
     STOPED = "stoped",
-    DONE = "done"
+    DONE = "done",
+    FAIL = "fail"
 }
 export interface PanelUpdate {
     deviceName: string;

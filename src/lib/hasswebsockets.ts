@@ -27,8 +27,7 @@ export class HomeAssistantSocket {
             const message = JSON.parse(event.data);
             if (message.type === "auth_ok"){
                this.isAuthOk = true;
-            }
-            //TODO: criar funções específicas para cada tipo de envento, parametro callback da função subscribeToEntities    
+            }            
         }    
         socket.onopen = (event) =>{
             socket.send(

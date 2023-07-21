@@ -2,7 +2,7 @@
     import { BUTTONSTATE, type PanelButton } from '$lib/hassinterfaces';
     import { Button, Modal, Space } from '@svelteuidev/core';
     import { writable, type Writable } from 'svelte/store';
-    import DeviceEntitiesEditor from '$lib/components/DeviceEntitiesEditor.svelte';
+    
     import type { Device } from '$lib/hassinterfaces';
     
     export let panelButton: PanelButton;
@@ -59,5 +59,5 @@
     target={'body'} 
     on:close={closeModal} 
     title={`Device: ${panelButton.device.device_name}`}>
-	<DeviceEntitiesEditor esphomeServer={esphomeServer} deviceStore={deviceStore}  entitiesIds={entitiesIds} ></DeviceEntitiesEditor>
+	
 </Modal>

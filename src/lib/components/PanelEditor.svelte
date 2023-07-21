@@ -1,22 +1,29 @@
 <script lang='ts'>
-import { Container, Card, Grid, Center, Space } from '@svelteuidev/core';
+import { Container, Card, Grid, Center, Space, Button, TextInput } from '@svelteuidev/core';
 import DeviceView from './DeviceView.svelte';
 import DeviceEntitiesEditor from './DeviceEntitiesEditor.svelte';
 import type {  Device,  Panel } from '$lib/hassinterfaces.js';
 import { getEmptyDevice } from '$lib/hassinterfaces';
 import  { writable, type Writable } from 'svelte/store';
-
+import PanelUpdater from './PanelUpdater.svelte';
+import {panels, STATUS, type PanelUpdate} from '$lib/stores/panelsupdater';
+import {uploadFirmware} from '$lib/panelupdater.client';
+import {sendConfig} from '$lib/esphomewebsockets';
+import {DeviceConfig} from '$lib/deviceconfig';
+import { logF } from '$lib/logger';
 export let panel: Panel;
 export let entities: string[] = [];
 export let esphomeServer: string;
 export let esphomeEntitiesToWatch: string[];
 export let accessToken: string;
 export let homeAssistantUrl: string;
-
-
-
+logF('Begin PanelEditor load:',panel);
+let devicesNamesToUpdate: string[];
+let showPanelUpdater: boolean = false;
 let currentStoreDevice: Writable<Device>;
+
 let disabled: boolean| undefined = undefined;
+
 let selectedButtonPos:number = 0;
 const sizes = {
         xs: 440,
@@ -30,14 +37,15 @@ const buttonPosition = [
     {l:1,r:4},
     {l:2,r:5}
 ] 
+const deviceArea: Writable<string> = writable('');
+const devicePanelName: Writable<string> = writable('');
 
 
-
-function setupFunc(e:any){
-    currentStoreDevice.set(panel.devices[e.detail.index]);
+function setupFunc(e:any){    
+    currentStoreDevice.set(panel.devices[e.detail.index]);    
     selectedButtonPos = e.detail.index;
 }
-currentStoreDevice = writable(panel.devices[0]);
+
 function preparePanel(){    
     for (let i=panel.devices.length; i <=5; i++){
         panel.devices.push(getEmptyDevice());
@@ -51,7 +59,84 @@ function onDeviceUpdated(e:any) {
     currentStoreDevice.set(e.detail.device);
     panel.devices[selectedButtonPos] = e.detail.device;
 }
+
+function getPanelToUpdate(deviceName:string){
+   const panelToUpdate:PanelUpdate = {
+    deviceName: deviceName,
+    configStatus: STATUS.STOPED,
+    compileStatus: STATUS.STOPED,
+    uploadStatus: STATUS.STOPED,
+    uploadPercent: 0
+    };
+    return panelToUpdate;
+}
+async function runUpdater(e:any){
+    const panelsToUpdate: PanelUpdate[] = [];
+    devicesNamesToUpdate = [];
+    panel.devices.forEach((device)=>{
+        if (device.device_name !== ''){
+            panelsToUpdate.push(getPanelToUpdate(device.device_name));
+            devicesNamesToUpdate.push(device.device_name);
+        }
+    });
+   // console.log(devicesNamesToUpdate);
+    panels.set(panelsToUpdate);
+    showPanelUpdater = true;    
+    if (devicesNamesToUpdate.length > 0){
+        panel.devices.forEach((device)=> {
+            const deviceConfig: DeviceConfig = new DeviceConfig(device);
+            deviceConfig.getConfig();
+            if (device.device_config !== ''){
+                //TODO: Fix sending device.device_config in blank, change interface type to class and buid config inside it.
+                sendConfig(esphomeServer,device.device_name,device.device_config);
+            }
+        });
+        uploadFirmware(devicesNamesToUpdate[0]);
+    }   
+}
+function closeModal(e: CustomEvent<any>): void {
+    showPanelUpdater=false;
+}
+
+const tmpDevice = panel.devices.find((device) => {
+    return device.device_name !== '';
+});
+
+if (tmpDevice) {
+    currentStoreDevice = writable(tmpDevice);
+    
+    const tmpPanelName = $currentStoreDevice.device_entities.find((entity)=>{
+        return entity.entity_id === `sensor.${$currentStoreDevice.device_name}_panel_name`;
+    });
+    if (tmpPanelName){
+        devicePanelName.set(tmpPanelName.state);
+    }
+    deviceArea.set($currentStoreDevice.device_area);
+}
+else {
+    currentStoreDevice = writable(panel.devices[0]);
+}
+deviceArea.subscribe( (areaTxt) => {    
+    panel.devices.forEach((device)=>{        
+        device.device_area = areaTxt;
+    });
+});
+devicePanelName.subscribe( (panelNameTxt) => {    
+    
+    panel.devices.forEach((device)=>{
+        
+        const deviceEntityToChange = device.device_entities.find((deviceEntity)=>{
+            return deviceEntity.entity_id === `sensor.${device.device_name}_panel_name`;
+        })
+        if (deviceEntityToChange){
+            deviceEntityToChange.state = panelNameTxt;
+        }      
+    });
+    $currentStoreDevice = $currentStoreDevice;
+} );
+
 preparePanel();
+logF('End PanelEditor load:',panel);
 </script>
 
 
@@ -73,7 +158,7 @@ preparePanel();
                                 homeAssistantUrl={homeAssistantUrl}
                                 esphomeEntitiesToWatch={esphomeEntitiesToWatch} 
                                 device={panel.devices[pos.l]} 
-                                index={pos.l} 
+                                index={pos.l}
                                 on:deviceViewSettingsClickEvent={setupFunc} />
                         </Grid.Col>
                         <Grid.Col span={6}>
@@ -85,11 +170,22 @@ preparePanel();
                                 homeAssistantUrl={homeAssistantUrl}                            
                                 esphomeEntitiesToWatch={esphomeEntitiesToWatch} 
                                 device={panel.devices[pos.r]} 
-                                index={pos.r} 
+                                index={pos.r}
                                 on:deviceViewSettingsClickEvent={setupFunc} />
                         </Grid.Col>
-                    {/each}                    
+                    {/each} 
+                    <Grid.Col span={10}>
+                        <TextInput
+                        bind:value={$devicePanelName}
+                        label="Panel name"                                                
+                        />
+                        <TextInput
+                        label="Área"                                                
+                        bind:value={$deviceArea}
+                        />
+                    </Grid.Col>                   
                 </Grid>
+                
             </Grid.Col>
             <Grid.Col span={7} >
                 <DeviceEntitiesEditor 
@@ -99,7 +195,16 @@ preparePanel();
                     deviceStore={currentStoreDevice}
                     on:deviceUpdated={onDeviceUpdated} />                           
             </Grid.Col>
+            
+            <Grid.Col span={9}>
+                <Button color="dark" on:click={runUpdater} >Upload Firmwares</Button>
+            </Grid.Col>
         </Grid>
     </Card>
 </Container>
 <Space h='md'/>
+<PanelUpdater 
+    panelName={$devicePanelName}
+    devicesNames={devicesNamesToUpdate} 
+    opened={showPanelUpdater}
+    close={closeModal} />

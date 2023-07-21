@@ -5,7 +5,7 @@
     //TODO: implementar .env para escolher entre auth manual x token
     import { HomeAssistantSocket } from '$lib/hasswebsockets';
     import ButtonPanel from '$lib/components/ButtonPanel.svelte';
-    import DeviceEntitiesEditor from '$lib/components/DeviceEntitiesEditor.svelte';
+    
     import { Grid, Modal, Space, TextInput } from '@svelteuidev/core';
     import type { Writable } from 'svelte/store';
     import CogOutline from 'svelte-material-icons/CogOutline.svelte';
@@ -42,7 +42,8 @@
             device_area: '',
             device_id: '',
             device_name: '',
-            device_entities: []
+            device_entities: [],
+            device_config: ''
         };
     }
     
@@ -53,6 +54,7 @@
                     device_id: '',
                    device_name: '',
                     device_area: '',
+                    device_config: '',
                     device_entities: []
                 },
                 panelArea: '',

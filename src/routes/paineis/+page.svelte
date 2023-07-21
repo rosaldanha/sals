@@ -1,14 +1,14 @@
 
 <script lang="ts">
-    import type {  Device,  Panel } from '$lib/hassinterfaces.js';
-    import { writable, type Writable } from 'svelte/store';
     import PanelEditor from '$lib/components/PanelEditor.svelte';
-
+    import { logF } from '$lib/logger';
     export let data: any;
+    logF('Start route',data.panels);
 </script>
 
 
 {#each data.panels as panel, index (panel.panel_name)  }
+    
     <PanelEditor 
         {panel}  
         homeAssistantUrl={data.homeAssistantUrl}

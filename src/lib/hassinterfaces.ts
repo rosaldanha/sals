@@ -2,7 +2,8 @@ export interface Device {
     device_id: string;
     device_name: string;
     device_area: string;
-    device_entities: Entity[];
+    device_config:string;
+    device_entities: Entity[];    
 }
 export interface Entity {
     entity_id: string;
@@ -42,9 +43,11 @@ export function getEmptyDevice():Device{
         device_id: '',
         device_name: '',
         device_area: '',
+        device_config: '',
         device_entities: []
     }
 }
+
 
 
 
