@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile-upstream:master-labs
 FROM node:19 as build
 
 ENV NODE_ENV=production 
