@@ -13,7 +13,7 @@ ADD https://github.com/rosaldanha/sals.git /app
 RUN npm install vite --save-dev
 RUN npm rebuild esbuild
 RUN npm ci
-RUN ls -alh ; exit 127
+#RUN ls -alh ; exit 127
 # COPY . ./
 RUN npm run build
 
