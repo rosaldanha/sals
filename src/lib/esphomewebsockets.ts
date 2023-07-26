@@ -1,4 +1,5 @@
 import { panels, type PanelUpdate } from "./stores/panelsupdater";
+import { env } from '$env/dynamic/public';
 
 export interface wsocketData {
     //{"type": "percent", "device": "smr2010", "status": "100"}
@@ -12,7 +13,7 @@ export type LocalCallBack = (newDeviceName: string) => void;
 export class EspHomeWebSocket {    
 
     private socket: WebSocket;
-    private esphomeUrl: string = 'ws://localhost:8001';
+    private esphomeUrl: string = `${env.PUBLIC_ESPHOME_BROKER}`;   // 'ws://dafne.sal.net.br:8001';
     private currentDevice: number = 0;
     private deviceList: PanelUpdate[];
     private unsubDeviceListUpdates: any;

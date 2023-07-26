@@ -151,7 +151,8 @@ export class Device implements DeviceInterface {
         }
         else
         {
-            this.device_entities[this.controlsId].state = '';
+            if (this.controlsId in this.device_entities)
+                this.device_entities[this.controlsId].state = '';
         }
     }
 

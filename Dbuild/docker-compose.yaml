@@ -1,0 +1,19 @@
+services:
+  esphomebroker:
+    build: https://github.com/rosaldanha/esphomeBroker.git#main:Dbuild
+  environment:
+    ESPHOME_SERVER_URL: http://example.com or https://example.com or wss://example.com #write the url to your esphomeserver here
+  ports:
+    - "8001:8001"
+  sals:
+    build: https://github.com/rosaldanha/sals.git#main:Dbuild
+    depends_on:
+      - esphomebroker
+    environment:
+      - ESPHOME_SERVER_URL=https://esphome.sal.net.br
+      - PUBLIC_HOMEASSISTANT_URL="https://yoururlhere.com"
+      - PUBLIC_ACCESSTOKEN="youaccesstokenthere"
+      - PUBLIC_ESPHOME_SERVER="https://youresphomeurlhere.com"
+      - PUBLIC_ESPHOME_BROKER="youresphomebrokerhere.url see esphomebroker service"
+    ports:
+      - "4173"

@@ -14,19 +14,17 @@ import PanelUpdater from './PanelUpdater.svelte';
 import {panels, STATUS, type PanelUpdate} from '$lib/stores/panelsupdater';
 import {uploadFirmware} from '$lib/panelupdater.client';
 import {sendConfig} from '$lib/esphomewebsockets';
-import {DeviceConfig} from '$lib/deviceconfig';
-import { logF } from '$lib/logger';
+
 export let panel: Panel;
 export let entities: string[] = [];
 export let esphomeServer: string;
 export let esphomeEntitiesToWatch: string[];
 export let accessToken: string;
 export let homeAssistantUrl: string;
-logF('Begin PanelEditor load:',panel);
+
 let devicesNamesToUpdate: string[];
 let showPanelUpdater: boolean = false;
 let currentStoreDevice: Writable<Device>;
-
 let disabled: boolean| undefined = undefined;
 
 let selectedButtonPos:number = 0;
@@ -136,7 +134,7 @@ devicePanelName.subscribe( (panelNameTxt) => {
 } );
 
 preparePanel();
-logF('End PanelEditor load:',panel);
+$devicePanelName = panel.panel_name;
 </script>
 
 
