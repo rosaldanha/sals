@@ -26,5 +26,5 @@ COPY --from=build /app .
 
 ENV HOST=0.0.0.0
 EXPOSE 4173
-#CMD ["tail","-f","/dev/null"]
-CMD ["npm","run", "dev","--", "--host", "0.0.0.0"]
+CMD ["tail","-f","/dev/null"]
+#CMD ["npm","run", "dev","--", "--host", "0.0.0.0"]
