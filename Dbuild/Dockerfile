@@ -3,7 +3,7 @@ FROM node:19 as build
 
 ENV NODE_ENV production 
 ENV VITE_BIN /app/node_modules/.bin/vite
-ENV PATH=$PATH:/app/node_modules/.bin
+ENV PATH $PATH:/app/node_modules/.bin
 
 WORKDIR /app
 
