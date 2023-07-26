@@ -10,6 +10,7 @@ WORKDIR /app
 # COPY package.json ./
 # COPY package-lock.json ./
 ADD https://github.com/rosaldanha/sals.git /app
+RUN npm install -g vite
 RUN npm install 
 COPY . ./
 #RUN ls -alhR ; exit 127
