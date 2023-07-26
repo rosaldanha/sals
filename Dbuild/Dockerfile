@@ -22,6 +22,7 @@ FROM node:19-alpine3.16
 
 WORKDIR /app
 COPY --from=build /app .
+RUN npm install -g vite
 
 
 ENV HOST=0.0.0.0
