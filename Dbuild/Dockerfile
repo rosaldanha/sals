@@ -1,7 +1,8 @@
 # syntax=docker/dockerfile-upstream:master-labs
 FROM node:19 as build
 
-ENV NODE_ENV=production 
+ENV NODE_ENV production 
+ENV VITE_BIN /app/node_modules/.bin/vite
 
 
 WORKDIR /app
