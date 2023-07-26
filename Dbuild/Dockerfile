@@ -11,11 +11,12 @@ WORKDIR /app
 # COPY package-lock.json ./
 ADD https://github.com/rosaldanha/sals.git /app
 RUN npm install -g vite
+RUN npm install svelte-kit
 RUN npm install 
 COPY . ./
 #RUN ls -alhR ; exit 127
 # COPY . ./
-#RUN npm run build
+RUN npm run build
 
 
 FROM node:19-alpine3.16
@@ -23,9 +24,9 @@ FROM node:19-alpine3.16
 WORKDIR /app
 COPY --from=build /app .
 RUN npm install -g vite
-
+RUN npm install svelte-kit
 
 ENV HOST=0.0.0.0
 EXPOSE 4173
-CMD ["tail","-f","/dev/null"]
-#CMD ["npm","run", "dev","--", "--host", "0.0.0.0"]
+#CMD ["tail","-f","/dev/null"]
+CMD ["npm","run", "preview","--", "--host", "0.0.0.0"]
