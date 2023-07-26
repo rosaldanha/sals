@@ -11,6 +11,7 @@ WORKDIR /app
 # COPY package-lock.json ./
 ADD https://github.com/rosaldanha/sals.git /app
 RUN npm install -g vite --save-dev
+RUN npm install @sveltejs/kit
 RUN npm rebuild esbuild
 RUN npm ci
 #RUN ls -alhR ; exit 127
