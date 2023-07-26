@@ -14,9 +14,10 @@ RUN npm install -g vite --save-dev
 RUN npm install @sveltejs/kit --save-dev
 RUN npm rebuild esbuild
 RUN npm ci
+COPY . .
 #RUN ls -alhR ; exit 127
 # COPY . ./
-#RUN npm run build
+RUN npm run build
 
 
 FROM node:19-alpine3.16
@@ -27,5 +28,5 @@ COPY --from=build /app .
 
 ENV HOST=0.0.0.0
 EXPOSE 4173
-CMD ["tail","-f","/dev/null"]
-# CMD ["npm","run", "preview","--", "--host", "0.0.0.0"]
+#CMD ["tail","-f","/dev/null"]
+CMD ["npm","run", "preview","--", "--host", "0.0.0.0"]
