@@ -2,8 +2,13 @@
 import { Container, Card, Grid, Center, Space, Button, TextInput } from '@svelteuidev/core';
 import DeviceView from './DeviceView.svelte';
 import DeviceEntitiesEditor from './DeviceEntitiesEditor.svelte';
-import type {  Device,  Panel } from '$lib/hassinterfaces.js';
-import { getEmptyDevice } from '$lib/hassinterfaces';
+
+// import type {  Device,  Panel } from '$lib/hassinterfaces.js';
+// import { getEmptyDevice } from '$lib/hassinterfaces';
+
+import type {Panel} from '$lib/panel';
+import {Device} from '$lib/device';
+
 import  { writable, type Writable } from 'svelte/store';
 import PanelUpdater from './PanelUpdater.svelte';
 import {panels, STATUS, type PanelUpdate} from '$lib/stores/panelsupdater';
@@ -48,7 +53,7 @@ function setupFunc(e:any){
 
 function preparePanel(){    
     for (let i=panel.devices.length; i <=5; i++){
-        panel.devices.push(getEmptyDevice());
+        panel.devices.push(Device.emptyDevice());
     }
 }
 function configureButtonForSearch(e:any) {
@@ -56,6 +61,16 @@ function configureButtonForSearch(e:any) {
         //on:deviceIsSearching={configureButtonForSearch}
 }
 function onDeviceUpdated(e:any) {    
+    $currentStoreDevice.buttonPos = -1;
+    $currentStoreDevice.panelName = '';
+    $currentStoreDevice = $currentStoreDevice;    
+    showPanelUpdater = true;
+    sendConfig(esphomeServer,$currentStoreDevice.device_name,$currentStoreDevice.device_config);
+    devicesNamesToUpdate = [];
+    panels.set([getPanelToUpdate($currentStoreDevice.device_name)]);
+    devicesNamesToUpdate.push($currentStoreDevice.device_name);             
+    uploadFirmware(devicesNamesToUpdate[0]);    
+    //sendconfig here and compile run pudater
     currentStoreDevice.set(e.detail.device);
     panel.devices[selectedButtonPos] = e.detail.device;
 }
@@ -83,13 +98,11 @@ async function runUpdater(e:any){
     panels.set(panelsToUpdate);
     showPanelUpdater = true;    
     if (devicesNamesToUpdate.length > 0){
-        panel.devices.forEach((device)=> {
-            const deviceConfig: DeviceConfig = new DeviceConfig(device);
-            deviceConfig.getConfig();
-            if (device.device_config !== ''){
-                //TODO: Fix sending device.device_config in blank, change interface type to class and buid config inside it.
-                sendConfig(esphomeServer,device.device_name,device.device_config);
-            }
+        panel.devices.forEach((device)=> {            
+             if (device.device_config !== ''){
+                 //TODO: Fix sending device.device_config in blank, change interface type to class and buid config inside it.
+                 sendConfig(esphomeServer,device.device_name,device.device_config);
+             }
         });
         uploadFirmware(devicesNamesToUpdate[0]);
     }   
@@ -104,13 +117,7 @@ const tmpDevice = panel.devices.find((device) => {
 
 if (tmpDevice) {
     currentStoreDevice = writable(tmpDevice);
-    
-    const tmpPanelName = $currentStoreDevice.device_entities.find((entity)=>{
-        return entity.entity_id === `sensor.${$currentStoreDevice.device_name}_panel_name`;
-    });
-    if (tmpPanelName){
-        devicePanelName.set(tmpPanelName.state);
-    }
+    devicePanelName.set($currentStoreDevice.panelName);
     deviceArea.set($currentStoreDevice.device_area);
 }
 else {
@@ -121,16 +128,9 @@ deviceArea.subscribe( (areaTxt) => {
         device.device_area = areaTxt;
     });
 });
-devicePanelName.subscribe( (panelNameTxt) => {    
-    
+devicePanelName.subscribe( (panelNameTxt) => {        
     panel.devices.forEach((device)=>{
-        
-        const deviceEntityToChange = device.device_entities.find((deviceEntity)=>{
-            return deviceEntity.entity_id === `sensor.${device.device_name}_panel_name`;
-        })
-        if (deviceEntityToChange){
-            deviceEntityToChange.state = panelNameTxt;
-        }      
+        device.panelName = panelNameTxt;
     });
     $currentStoreDevice = $currentStoreDevice;
 } );

@@ -6,7 +6,11 @@
     import CogOutline from 'svelte-material-icons/CogOutline.svelte';
     import HomeSearchOutline from 'svelte-material-icons/HomeSearchOutline.svelte';
    
-    import type {Device, Entity} from '$lib/hassinterfaces.js';
+    //import type {Device, Entity} from '$lib/hassinterfaces.js';
+    import { Device } from '$lib/device';
+    import {Entity} from '$lib/entity';
+    import type {Panel} from '$lib/panel';
+
     import { HomeAssistantSocket } from '$lib/hasswebsockets';
     import {log,logF} from '$lib/logger';
     import {deviceIsSearching,deviceViewSettingsClickEvent} from '$lib/hassinterfaces.js';    
@@ -19,7 +23,7 @@
     export let esphomeEntitiesToWatch: string[];
     export let homeAssistantUrl: string;
     export let accessToken: string;
-    export let panel:any;
+    export let panel:Panel;
     export let disabled: boolean|undefined = undefined;
     logF('load deviceView device:',device);
    // logF('deviceView FirstLoad panel:',panel);
@@ -30,7 +34,7 @@
     let loading: boolean = false;
     
     
-    async function getBuiltDeviceObj(entityId:string) {
+    async function getBuiltDeviceObj(entityId:string):Promise<Device> {
         const response = await fetch('/hass/device', {
             method: 'POST',
             body: JSON.stringify({ entityId }),
@@ -38,27 +42,14 @@
                 'content-type': 'application/json'
             }
         });
-        const result = await response.json();
-        return result;
+        const result = await response.json();        
+        
+        return new Device(result);
     }
     function setPositionEntity(index:number): void {
-        const entityId = `sensor.${device.device_name}_button_pos`;
-        const buttonPos = device.device_entities.find((entity:Entity)=>{
-            return entity.entity_id === entityId;
-        });
-        if (buttonPos){
-            buttonPos.state = index.toString();
-        }
-        else{
-            device.device_entities.push(
-                {
-                entity_id: entityId,
-                state: index.toString(),
-                attributes: [],
-                last_changed: '',
-                last_updated: ''
-            });
-        }
+        device.buttonPos = index;
+
+
     }
     function handleSearch(result:any, listener: any ){ 
         (async function() {
@@ -66,9 +57,10 @@
             loading = false;
             dispatch(deviceIsSearching,{isSearching: false});
             device = await getBuiltDeviceObj(result.variables.trigger.entity_id);
-            setPositionEntity(index);
+            device.buttonPos = index;
+            device.panelName = panel.panel_name;
             panel.devices[index] =  device;
-            homeAssistantSocket?.socket.removeEventListener('message',listener);            
+            homeAssistantSocket?.socket.removeEventListener('message',listener);             
             homeAssistantSocket = null;
         })();
     }    
@@ -76,11 +68,12 @@
     function onClickSettings(){
         if (device.device_name === ''){
             homeAssistantSocket =  new HomeAssistantSocket(homeAssistantUrl,accessToken);
-            //log(homeAssistantSocket);
+            //log(homeAssistantSocket);      
             loading = true;
             dispatch(deviceIsSearching,{isSearching: true});
             setTimeout(() => {
                 log('send Event');
+                console.log('esphomeEntitiesToWatch',esphomeEntitiesToWatch)
                 homeAssistantSocket!.subscribeToStateTrigger(esphomeEntitiesToWatch,handleSearch);    
             }, 1000);
             

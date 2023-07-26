@@ -78,10 +78,10 @@ export function uploadFirmware(firstDevice:string){
                 onCompile,
                 onPercent,
                 onOta,
-                onChangeDevice
-                );        
+                onChangeDevice);        
 }
 
 function onChangeDevice(newDeviceName: string): void {
+    console.log(newDeviceName);
     currentDevice =  newDeviceName;
 }

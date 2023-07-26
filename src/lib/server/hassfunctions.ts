@@ -1,15 +1,14 @@
-import type { Device, Entity, Panel } from '$lib/hassinterfaces';
-import {log,error} from '$lib/logger';
+import type { EntityInterface } from '$lib/entity';
+import { emptyEntityInterface } from '$lib/entity';
+import { emptyPanelInterface } from '$lib/panel';
+import type { PanelInterface } from '$lib/panel';
+import type {  DeviceInterface   } from '$lib/device';
+import { getDeviceButtonFromInterface,getDevicePanelNameFromInterface, getDeviceStatusId } from '$lib/device';
+import {log,error,logF} from '$lib/logger';
 import { env } from '$env/dynamic/public';
 
-export async function getEntityState(entityId:string){  
-  let entityState: Entity = {
-    entity_id:'',
-    state: '',
-    attributes: {},
-    last_changed: '',
-    last_updated: ''
-  };
+export async function getEntityState(entityId:string) :Promise<EntityInterface> {  
+  let entityState: EntityInterface = emptyEntityInterface();
   try {
       const urlForState = `${env.PUBLIC_HOMEASSISTANT_URL}/api/states/${entityId}`;        
       const response = await fetch(urlForState, {
@@ -21,12 +20,12 @@ export async function getEntityState(entityId:string){
           },
           //mode:'no-cors',
         });
-      entityState = await response.json();
+      entityState = await response.json() as EntityInterface;
 
   } catch (e) {
       error(e);
   }
-  console.log('getEntityState',entityState)
+  //console.log('getEntityState',entityState)
   return entityState;
 }
 
@@ -60,7 +59,7 @@ export async function getTemplateResolved(templateStr:string) {
     }
     return jsonResult;
 }
-async function getDeviceId(entityId:string) {
+async function getDeviceId(entityId:string):Promise<string> {
     const template = `{{  device_id('${entityId}') | to_json()  }}`;    
     const deviceId = await getTemplateResolved(template);    
     return deviceId;
@@ -70,10 +69,9 @@ async function getDeviceName(entityId:string):Promise<string> {
     const deviceName = await getTemplateResolved(template);
     return deviceName;
 }
-async function getDeviceEntities(deviceId:string){
+async function getDeviceEntities(deviceId:string):Promise<string[]>{
     const template = `{{ device_entities('${deviceId}') | to_json }}`
-    let entitiesTxt = await getTemplateResolved(template);
-    
+    let entitiesTxt = await getTemplateResolved(template);    
     return entitiesTxt;
 }
 async function getDeviceArea(deviceId:string) {
@@ -81,12 +79,12 @@ async function getDeviceArea(deviceId:string) {
   let entitiesTxt = await getTemplateResolved(template);      
   return entitiesTxt;
 }
-export async function buildDeviceObj(entityId:string):Promise<Device> {
+export async function buildDeviceObj(entityId:string):Promise<DeviceInterface> {
   const deviceId = await getDeviceId(entityId);
   const deviceName = await getDeviceName(entityId);
   const deviceEntities = await getDeviceEntities(deviceId);
   const deviceArea = await getDeviceArea(deviceId);
-  let tmpEntitiesStates: Entity[] = [];
+  let tmpEntitiesStates: EntityInterface[] = [];
   //TODO: deal with button_pos? here ?
   for (const tmpEntity of deviceEntities){
       const tmpState = await getEntityState(tmpEntity);
@@ -97,12 +95,11 @@ export async function buildDeviceObj(entityId:string):Promise<Device> {
         log('tmpEntityError',tmpEntity);
       }                        
   }
-
-  return {
-    device_id : deviceId,
+  return {  
+    device_id: deviceId,
     device_name: deviceName,
-    device_area: deviceArea,
-    device_config: '', //TODO: build config here ? create a common function ?
+    device_area: deviceArea,        
+    device_config: '',
     device_entities: tmpEntitiesStates
   }; 
 
@@ -110,7 +107,7 @@ export async function buildDeviceObj(entityId:string):Promise<Device> {
 
 export async function getEsphomeDevices(){
     let entidades: string[] = [];
-    let devices: Device[] = [];
+    let devices: DeviceInterface[] = [];
     let devicesNames: String[] = [];
 
     try {
@@ -121,7 +118,7 @@ export async function getEsphomeDevices(){
               const device = entity.split('.')[1].split('_')[0];
               if ( ! devicesNames.includes(device) ){
                   devicesNames.push(device);
-                  const deviceObj:Device = await buildDeviceObj(entity);
+                  const deviceObj:DeviceInterface = await buildDeviceObj(entity);
                   devices.push(deviceObj);
               }
           }
@@ -135,104 +132,55 @@ export async function getEsphomeDevices(){
       devices:devices
     };
 }
-function getDeviceButtonPos(device:Device):number{
-  const deviceButtonPos: Entity = device.device_entities.find((entity) =>{
-      return entity.entity_id === `sensor.${device.device_name}_button_pos`;
-  }) || {
-    entity_id: '',
-    state: '-1',
-    attributes: [],
-    last_changed: '',
-    last_updated: ''
-  } ;
-  return parseInt(deviceButtonPos.state);
-}
-export async function getPanelByName(panelName:string) {
+
+export async function getPanelByName(panelName:string):Promise<PanelInterface> {
   const { devices } = await getEsphomeDevices();
-  const panelToReturn: Panel = {
-    panel_area: '',
-    panel_name: panelName,
-    devices: getEmptyDeviceArray()    
-  } ;
-  devices.forEach(device => {    
-    const entity_panel = device.device_entities.find((entity)=>{
-      return entity.entity_id === `sensor.${device.device_name}_panel_name`
-    });
-    if ( entity_panel &&  entity_panel?.state === panelName ){
-      panelToReturn.devices[getDeviceButtonPos(device)] = device;
+  const panelToReturn: PanelInterface = emptyPanelInterface(panelName);
+  
+  devices.forEach(device => {
+    if ( getDevicePanelNameFromInterface(device) === panelName ){
+      panelToReturn.devices[getDeviceButtonFromInterface(device)] = device;
     }
   });
   return panelToReturn;  
 }
 export async function getPanels() {
   const { devices } = await getEsphomeDevices();
-  const panelDictionary: Map<string, Panel> = new Map();  
-  devices.forEach(device => {
-    const entity_panel =
-    device.device_entities.find((entity)=>{
-      return entity.entity_id === `sensor.${device.device_name}_panel_name`
-    });
-    if (entity_panel){
-      if (panelDictionary.get(entity_panel.state)) {
-        const tmpPanel = panelDictionary.get(entity_panel.state);
-        tmpPanel!.devices[getDeviceButtonPos(device)] = device;
+  
+  let panelDictionary: Record<string, PanelInterface> = {};  
+  devices.forEach(device => {    
+    const deviceInterfacePanelName = getDevicePanelNameFromInterface(device);
+    const deviceInterfaceButtonPos = getDeviceButtonFromInterface(device);
+    //console.log('getPanels() =>',device.device_name,deviceInterfacePanelName,deviceInterfaceButtonPos)
+    if ( deviceInterfacePanelName !== ''){
+      if (deviceInterfacePanelName in panelDictionary) {
+        panelDictionary[deviceInterfacePanelName]!.devices[deviceInterfaceButtonPos] = device ;
+        
       }
       else
       { // New Panel ! 
-        const tmpPanel = {
-          panel_area: device.device_area,
-          panel_name: entity_panel.state,
-          devices: getEmptyDeviceArray()
-        }
-        //tmpPanel.devices[]
-        tmpPanel.devices[getDeviceButtonPos(device)] = device;
-        panelDictionary.set(entity_panel.state, tmpPanel);
-        //console.log(panelDictionary);
-        //[device]
+        panelDictionary[deviceInterfacePanelName] = emptyPanelInterface(deviceInterfacePanelName);        
+        panelDictionary[deviceInterfacePanelName]!.devices[deviceInterfaceButtonPos] = device;
       }
     }    
   });
-  const panels: Panel[] = [];
-  panelDictionary.forEach((pnl)=>{
-    panels.push(pnl);
-  });
+  const panels: PanelInterface[] = Object.values(panelDictionary);  
+  console.log(panelDictionary);
   return panels;
 }
-function getEmptyDevice():Device {
-  return {
-    device_id: '',
-    device_name: '',
-    device_area: '',
-    device_config: '',
-    device_entities: []
-  }
-}
-function getEmptyDeviceArray(): Device[]{
-    return [
-      getEmptyDevice(),
-      getEmptyDevice(),
-      getEmptyDevice(),
-      getEmptyDevice(),
-      getEmptyDevice(),
-      getEmptyDevice(),
-    ]
-}
+
+
 export async function getAllEntities(){
   // {{ states | selectattr('entity_id', 'match', 'iniciacom') | map(attribute='entity_id') | list }}
   const entities = await getTemplateResolved("{{ states | map(attribute='entity_id') | list | to_json}}");
   return entities
 }
 
-export async function getEspHomeEntitiesToWatch(){
-  const entities: string[] = [];
+export async function getEspHomeEntitiesIdToWatch():Promise<string[]>{
+  const entitiesIdToWatch: string[] = [];
   const {devices}= await getEsphomeDevices();
-  for (const device of devices) {
-      const entity =  device.device_entities.find((element:Entity) => {
-          return element.entity_id.startsWith('binary_sensor.');
-      } );            
-      if (entity){
-          entities.push(entity.entity_id);            
-      }            
+  for (const device of devices) {    
+    entitiesIdToWatch.push(getDeviceStatusId(device));
   }
-  return entities;
+  return entitiesIdToWatch;
 }
