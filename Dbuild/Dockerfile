@@ -16,7 +16,7 @@ RUN npm rebuild esbuild
 RUN npm ci
 #RUN ls -alhR ; exit 127
 # COPY . ./
-RUN npm run build
+#RUN npm run build
 
 
 FROM node:19-alpine3.16
