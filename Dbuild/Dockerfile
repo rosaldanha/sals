@@ -10,6 +10,7 @@ WORKDIR /app
 # COPY package-lock.json ./
 ADD https://github.com/rosaldanha/sals.git /app
 RUN npm install vite --save-dev
+RUN npm rebuild esbuild
 RUN npm ci
 # COPY . ./
 RUN npm run build
