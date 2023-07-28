@@ -25,6 +25,7 @@ WORKDIR /app
 COPY --from=build /app .
 RUN npm install -g vite
 RUN npm install svelte-kit
+RUN npm install 
 
 ENV HOST=0.0.0.0
 EXPOSE 4173
