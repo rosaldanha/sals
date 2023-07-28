@@ -26,9 +26,9 @@ COPY --from=build /app .
 RUN npm install -g vite
 RUN npm install svelte-kit
 RUN npm install 
-RUN npm run build -https
+
 
 ENV HOST=0.0.0.0
 EXPOSE 4173
 #CMD ["tail","-f","/dev/null"]
-CMD ["npm","run", "preview","--", "--host", "0.0.0.0"]
+CMD ["npm","run", "dev","--", "--host", "0.0.0.0"]
