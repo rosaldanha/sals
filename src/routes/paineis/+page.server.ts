@@ -1,12 +1,15 @@
 import { getPanels,getAllEntities, getEspHomeEntitiesIdToWatch } from '$lib/server/hassfunctions';
+//import type { RequestHandler } from '@sveltejs/kit';
 import { env } from '$env/dynamic/public';
 
 //changed +page.server.ts to +page.ts  try to fix error
 /** @type {import('./$types').PageServerLoad} */
-export async function load() {    
-    const panelsInterfaces =  await getPanels();    
-    const entitiesIdToChoose = await getAllEntities();
-    const esphomeEntitiesToWatch = await getEspHomeEntitiesIdToWatch();
+export async function load({ fetch }) {  
+    
+    const panelsInterfaces =  await getPanels(fetch);    
+    const entitiesIdToChoose = await getAllEntities(fetch);
+    const esphomeEntitiesToWatch = await getEspHomeEntitiesIdToWatch(fetch);
+    
     //console.log('esphomeEntitiesToWatch page.server.ts',esphomeEntitiesToWatch);
     //console.dir(panels, { depth: null });
     //console.log(panels[0].toJson());

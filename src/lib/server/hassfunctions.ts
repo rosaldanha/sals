@@ -7,7 +7,7 @@ import { getDeviceButtonFromInterface,getDevicePanelNameFromInterface, getDevice
 import {log,error,logF} from '$lib/logger';
 import { env } from '$env/dynamic/public';
 
-export async function getEntityState(entityId:string) :Promise<EntityInterface> {  
+export async function getEntityState(entityId:string, fetch:any) :Promise<EntityInterface> {  
   let entityState: EntityInterface = emptyEntityInterface();
   try {
       const urlForState = `${env.PUBLIC_HOMEASSISTANT_URL}/api/states/${entityId}`;        
@@ -29,7 +29,7 @@ export async function getEntityState(entityId:string) :Promise<EntityInterface> 
   return entityState;
 }
 
-export async function getTemplateResolved(templateStr:string) {
+export async function getTemplateResolved(templateStr:string, fetch:any) {
     let jsonResult: any = null;
     //log(env.PUBLIC_ACCESSTOKEN);
     try {
@@ -59,35 +59,35 @@ export async function getTemplateResolved(templateStr:string) {
     }
     return jsonResult;
 }
-async function getDeviceId(entityId:string):Promise<string> {
+async function getDeviceId(entityId:string, fetch:any):Promise<string> {
     const template = `{{  device_id('${entityId}') | to_json()  }}`;    
-    const deviceId = await getTemplateResolved(template);    
+    const deviceId = await getTemplateResolved(template,fetch);    
     return deviceId;
 }
-async function getDeviceName(entityId:string):Promise<string> {
+async function getDeviceName(entityId:string, fetch:any):Promise<string> {
     const template = `{{  device_attr('${entityId}','name') | to_json }}`
-    const deviceName = await getTemplateResolved(template);
+    const deviceName = await getTemplateResolved(template,fetch);
     return deviceName;
 }
-async function getDeviceEntities(deviceId:string):Promise<string[]>{
+async function getDeviceEntities(deviceId:string, fetch:any):Promise<string[]>{
     const template = `{{ device_entities('${deviceId}') | to_json }}`
-    let entitiesTxt = await getTemplateResolved(template);    
+    let entitiesTxt = await getTemplateResolved(template, fetch);    
     return entitiesTxt;
 }
-async function getDeviceArea(deviceId:string) {
+async function getDeviceArea(deviceId:string, fetch:any) {
   const template = `{{ area_name('${deviceId}') | to_json }}`
-  let entitiesTxt = await getTemplateResolved(template);      
+  let entitiesTxt = await getTemplateResolved(template,fetch);      
   return entitiesTxt;
 }
-export async function buildDeviceObj(entityId:string):Promise<DeviceInterface> {
-  const deviceId = await getDeviceId(entityId);
-  const deviceName = await getDeviceName(entityId);
-  const deviceEntities = await getDeviceEntities(deviceId);
-  const deviceArea = await getDeviceArea(deviceId);
+export async function buildDeviceObj(entityId:string, fetch:any):Promise<DeviceInterface> {
+  const deviceId = await getDeviceId(entityId, fetch);
+  const deviceName = await getDeviceName(entityId, fetch);
+  const deviceEntities = await getDeviceEntities(deviceId, fetch);
+  const deviceArea = await getDeviceArea(deviceId, fetch);
   let tmpEntitiesStates: EntityInterface[] = [];
   //TODO: deal with button_pos? here ?
   for (const tmpEntity of deviceEntities){
-      const tmpState = await getEntityState(tmpEntity);
+      const tmpState = await getEntityState(tmpEntity, fetch);
       if (tmpState.entity_id){
         tmpEntitiesStates.push(tmpState);
       }
@@ -105,20 +105,20 @@ export async function buildDeviceObj(entityId:string):Promise<DeviceInterface> {
 
 }
 
-export async function getEsphomeDevices(){
+export async function getEsphomeDevices(fetch:any){
     let entidades: string[] = [];
     let devices: DeviceInterface[] = [];
     let devicesNames: String[] = [];
 
     try {
       const template = "{{  integration_entities('esphome') | to_json }}";
-      entidades = await getTemplateResolved(template);
+      entidades = await getTemplateResolved(template,fetch);
       for (const entity of entidades){
           if (entity.includes('smr2')) {
               const device = entity.split('.')[1].split('_')[0];
               if ( ! devicesNames.includes(device) ){
                   devicesNames.push(device);
-                  const deviceObj:DeviceInterface = await buildDeviceObj(entity);
+                  const deviceObj:DeviceInterface = await buildDeviceObj(entity, fetch);
                   devices.push(deviceObj);
               }
           }
@@ -133,8 +133,8 @@ export async function getEsphomeDevices(){
     };
 }
 
-export async function getPanelByName(panelName:string):Promise<PanelInterface> {
-  const { devices } = await getEsphomeDevices();
+export async function getPanelByName(panelName:string, fetch:any):Promise<PanelInterface> {
+  const { devices } = await getEsphomeDevices(fetch);
   const panelToReturn: PanelInterface = emptyPanelInterface(panelName);
   
   devices.forEach(device => {
@@ -144,8 +144,8 @@ export async function getPanelByName(panelName:string):Promise<PanelInterface> {
   });
   return panelToReturn;  
 }
-export async function getPanels() {
-  const { devices } = await getEsphomeDevices();
+export async function getPanels(fetch:any) {
+  const { devices } = await getEsphomeDevices(fetch);
   
   let panelDictionary: Record<string, PanelInterface> = {};  
   devices.forEach(device => {    
@@ -170,15 +170,15 @@ export async function getPanels() {
 }
 
 
-export async function getAllEntities(){
+export async function getAllEntities(fetch:any){
   // {{ states | selectattr('entity_id', 'match', 'iniciacom') | map(attribute='entity_id') | list }}
-  const entities = await getTemplateResolved("{{ states | map(attribute='entity_id') | list | to_json}}");
+  const entities = await getTemplateResolved("{{ states | map(attribute='entity_id') | list | to_json}}",fetch);
   return entities
 }
 
-export async function getEspHomeEntitiesIdToWatch():Promise<string[]>{
+export async function getEspHomeEntitiesIdToWatch(fetch:any):Promise<string[]>{
   const entitiesIdToWatch: string[] = [];
-  const {devices}= await getEsphomeDevices();
+  const {devices}= await getEsphomeDevices(fetch);
   for (const device of devices) {    
     entitiesIdToWatch.push(getDeviceStatusId(device));
   }
