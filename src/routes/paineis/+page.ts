@@ -1,5 +1,7 @@
 import { getPanels,getAllEntities, getEspHomeEntitiesIdToWatch } from '$lib/server/hassfunctions';
 import { env } from '$env/dynamic/public';
+
+//changed +page.server.ts to +page.ts  try to fix error
 /** @type {import('./$types').PageServerLoad} */
 export async function load() {    
     const panelsInterfaces =  await getPanels();    
